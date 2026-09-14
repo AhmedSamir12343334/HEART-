@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heart Drawing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Dancing+Script:wght@700&family=Amiri:ital,wght@0,700;1,700&family=Outfit:wght@600;800&family=Inter:wght@300;400;600&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #05000a;
+      font-family: 'Cairo', 'Inter', sans-serif;
+      overflow-x: hidden;
+      position: relative;
+      user-select: none;
+      padding: 70px 12px 30px;
+    }
+
+    #starCanvas,
+    #petalCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    #starCanvas {
+      z-index: 0;
+    }
+
+    #petalCanvas {
+      z-index: 1;
+    }
+
+    /* Top utility bar */
+    .top-bar {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    .music-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    .top-btn {
+      pointer-events: auto;
+      background: rgba(35, 5, 45, 0.7);
+      border: 1px solid rgba(255, 111, 160, 0.35);
+      color: #ffb8d4;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.82rem;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(14px);
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      white-space: nowrap;
+    }
+
+    .top-btn.icon-only {
+      padding: 8px 12px;
+    }
+
+    .top-btn:hover {
+      background: rgba(255, 58, 110, 0.25);
+      border-color: #ff6fa0;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 58, 110, 0.35);
+    }
+
+    .top-btn.playing {
+      border-color: #00ffcc;
+      color: #b3ffec;
+      box-shadow: 0 0 16px rgba(0, 255, 204, 0.4);
+      animation: pulseBtn 2s infinite alternate;
+    }
+
+    @keyframes pulseBtn {
+      from {
+        transform: scale(1);
+      }
+
+      to {
+        transform: scale(1.04);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .top-bar {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        gap: 5px;
+      }
+
+      .top-btn {
+        padding: 6px 10px;
+        font-size: 0.76rem;
+        gap: 4px;
+      }
+
+      .top-btn.icon-only {
+        padding: 6px 9px;
+      }
+
+      #musicText {
+        display: none;
+      }
+
+      body {
+        padding-top: 64px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .top-btn {
+        padding: 5px 8px;
+        font-size: 0.7rem;
+      }
+    }
+
+    .scene {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 8px;
+      max-width: 520px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .title {
+      font-family: 'Playfair Display', 'Cairo', serif;
+      font-size: clamp(1.25rem, 5vw, 2rem);
+      color: #ff6fa0;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 20px #ff3370aa, 0 0 40px #ff006688;
+      opacity: 0;
+      animation: fadeIn 1s 0.3s forwards;
+      text-align: center;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .canvas-wrap {
+      position: relative;
+      width: min(340px, 82vw);
+      height: min(340px, 82vw);
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .canvas-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -35px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--glow-color, #ff006633) 0%, transparent 70%);
+      animation: pulseGlow 2.5s ease-in-out infinite alternate;
+      pointer-events: none;
+      transition: --glow-color 0.5s;
+    }
+
+    @keyframes pulseGlow {
+      from {
+        opacity: 0.4;
+        transform: scale(0.92);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1.08);
+      }
+    }
+
+    #heart {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    #liquidLetter {
+      position: absolute;
+      left: 50%;
+      top: 54.7%;
+      transform: translate(-50%, -50%) scale(0);
+      width: min(135px, 38%);
+      height: min(135px, 38%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    #liquidLetter.show {
+      opacity: 1;
+      animation: floatLetter 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatLetter {
+      from {
+        transform: translate(-50%, -50%) scale(1) translateY(0);
+      }
+
+      to {
+        transform: translate(-50%, -50%) scale(1.05) translateY(-3px);
+      }
+    }
+
+    /* Custom Name & Date Controls Bar */
+    .controls-container {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 100%;
+      opacity: 0;
+      animation: fadeIn 1s 0.8s forwards;
+      direction: rtl;
+      box-sizing: border-box;
+    }
+
+    .letter-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(30, 5, 40, 0.7);
+      border: 1px solid rgba(255, 111, 160, 0.3);
+      padding: 5px 8px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      direction: rtl;
+      flex-wrap: wrap;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .letter-control label {
+      font-size: 0.78rem;
+      color: #ffb8d4;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .letter-input {
+      width: 60px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 111, 160, 0.5);
+      border-radius: 20px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: bold;
+      text-align: center;
+      padding: 3px 6px;
+      outline: none;
+      transition: all 0.2s;
+      font-family: 'Playfair Display', 'Cairo', serif;
+      direction: ltr;
+    }
+
+    .letter-input.date-input {
+      width: 90px;
+      font-size: 0.82rem;
+    }
+
+    .letter-input:focus {
+      border-color: #00ffcc;
+      background: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+    }
+
+    .quick-chips {
+      display: flex;
+      gap: 3px;
+      direction: ltr;
+      flex-wrap: wrap;
+    }
+
+    .chip-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 111, 160, 0.3);
+      color: #ffb8d4;
+      border-radius: 12px;
+      width: 22px;
+      height: 22px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .chip-btn:hover {
+      background: #ff3a6e;
+      color: #fff;
+      transform: scale(1.15);
+    }
+
+    /* Font bar styling */
+    .font-bar {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2px;
+      opacity: 0;
+      animation: fadeIn 1s 0.9s forwards;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 0 4px;
+    }
+
+    .font-bar span {
+      font-size: 0.74rem;
+      color: #ff6fa0cc;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .font-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 111, 160, 0.3);
+      color: #ffb8d4;
+      border-radius: 20px;
+      padding: 3px 8px;
+      font-size: 0.74rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'Cairo', sans-serif;
+      white-space: nowrap;
+    }
+
+    .font-btn:hover {
+      background: rgba(255, 58, 110, 0.3);
+      border-color: #ff6fa0;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .font-btn.active {
+      background: linear-gradient(135deg, #ff3370, #ff80a0);
+      border-color: #fff;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255, 51, 112, 0.6);
+    }
+
+    /* Color picker bar */
+    .color-bar {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeIn 1s 1s forwards;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .color-bar span {
+      font-size: 0.74rem;
+      color: #ff6fa0cc;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .clr-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.18s, border-color 0.18s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .clr-btn:hover {
+      transform: scale(1.22);
+    }
+
+    .clr-btn.active {
+      border-color: #fff;
+      transform: scale(1.22);
+      box-shadow: 0 0 12px #fff;
+    }
+
+    /* Message */
+    .message-wrap {
+      min-height: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+      padding: 0 4px;
+      box-sizing: border-box;
+    }
+
+    #msgText {
+      font-family: 'Playfair Display', 'Cairo', serif;
+      font-style: italic;
+      font-size: clamp(0.76rem, 3.2vw, 1.1rem);
+      color: #ffb8d4;
+      text-shadow: 0 0 14px #ff337088, 0 0 32px #ff006655;
+      letter-spacing: 0.04em;
+      border-right: 2px solid #ff6fa0;
+      white-space: nowrap;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.4s;
+      animation: cursorBlink 0.8s step-end infinite;
+      max-width: 94vw;
+    }
+
+    #msgText.active {
+      opacity: 1;
+    }
+
+    #msgText.done {
+      border-right-color: transparent;
+      animation: none;
+    }
+
+    @keyframes cursorBlink {
+
+      0%,
+      100% {
+        border-right-color: #ff6fa0cc;
+      }
+
+      50% {
+        border-right-color: transparent;
+      }
+    }
+
+    /* Special Dedication Badge */
+    .dedication-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 111, 160, 0.12));
+      border: 1px solid rgba(255, 215, 0, 0.35);
+      padding: 5px 16px;
+      border-radius: 30px;
+      color: #ffe8b2;
+      font-size: clamp(0.78rem, 2.5vw, 0.92rem);
+      font-family: 'Playfair Display', 'Cairo', serif;
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.12);
+      opacity: 0;
+      animation: fadeIn 1s 1.1s forwards;
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+
+    .dedication-badge:hover {
+      border-color: rgba(255, 215, 0, 0.6);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
+    }
+
+    /* Bottom buttons */
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      opacity: 0;
+      animation: fadeIn 1s 1.2s forwards;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 50px;
+      font-size: 0.84rem;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-replay {
+      background: linear-gradient(135deg, #ff3370, #ff80a0);
+      color: #fff;
+      box-shadow: 0 0 18px #ff337066;
+    }
+
+    .btn-replay:hover {
+      box-shadow: 0 0 28px #ff3370aa;
+    }
+
+    .btn-share {
+      background: linear-gradient(135deg, #7b2fff, #b06dff);
+      color: #fff;
+      box-shadow: 0 0 18px #7b2fff55;
+    }
+
+    .btn-share:hover {
+      box-shadow: 0 0 28px #7b2fffaa;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #00b09b, #00d4aa);
+      color: #fff;
+      box-shadow: 0 0 18px #00b09b55;
+    }
+
+    .btn-save:hover {
+      box-shadow: 0 0 28px #00d4aaaa;
+    }
+
+    /* Click hearts */
+    .click-heart {
+      position: fixed;
+      pointer-events: none;
+      font-size: 1.3rem;
+      z-index: 999;
+      animation: flyHeart 1.2s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+    }
+
+    @keyframes flyHeart {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translateY(0) scale(0.6) rotate(0deg);
+      }
+
+      50% {
+        transform: translate(-50%, -50%) translateY(-50px) scale(1.3) rotate(15deg);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translateY(-110px) scale(0.3) rotate(-20deg);
+      }
+    }
+
+    .subtitle {
+      font-size: 0.72rem;
+      color: #ff6fa055;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeIn 1s 1.4s forwards;
+      text-align: center;
+    }
+
+    @media (max-width: 420px) {
+      .btn {
+        padding: 6px 11px;
+        font-size: 0.76rem;
+        gap: 4px;
+      }
+
+      .scene {
+        gap: 9px;
+      }
+
+      .canvas-wrap {
+        width: min(300px, 80vw);
+        height: min(300px, 80vw);
+      }
+
+      .letter-control {
+        padding: 4px 7px;
+        gap: 4px;
+      }
+
+      .letter-input {
+        width: 50px;
+        font-size: 0.82rem;
+      }
+
+      .chip-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 0.66rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .scene {
+        gap: 7px;
+        padding: 6px 6px;
+      }
+
+      .canvas-wrap {
+        width: min(270px, 78vw);
+        height: min(270px, 78vw);
+      }
+
+      .font-btn {
+        padding: 2px 6px;
+        font-size: 0.68rem;
+      }
+
+      .clr-btn {
+        width: 22px;
+        height: 22px;
+      }
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #250030dd;
+      backdrop-filter: blur(12px);
+      color: #ffb8d4;
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      z-index: 9999;
+      box-shadow: 0 0 25px rgba(255, 51, 112, 0.4);
+      border: 1px solid rgba(255, 111, 160, 0.35);
+      pointer-events: none;
+      animation: fadeIn 0.3s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="starCanvas"></canvas>
+  <canvas id="petalCanvas"></canvas>
+
+  <!-- Top Utility Bar -->
+  <div class="top-bar">
+    <div class="music-controls">
+      <button class="top-btn" id="musicBtn" title="تشغيل أغنية شيرين - عيونك دوبوني">
+        <span id="musicIcon">🎵</span>
+        <span id="musicText">شيرين – عيونك دوبوني</span>
+      </button>
+      <button class="top-btn icon-only" id="uploadMusicBtn" title="اختيار ملف أغنية MP3 من جهازك">
+        <span>📁</span>
+      </button>
+      <input type="file" id="musicFileInput" accept="audio/*" style="display:none;" />
+    </div>
+    <button class="top-btn" id="petalToggleBtn" title="تبديل تساقط بتلات الورد">
+      <span>🌹</span>
+      <span id="petalText">البتلات</span>
+    </button>
+  </div>
+
+  <!-- Audio Element for Sherine Song -->
+  <audio id="songAudio" preload="auto" loop>
+    <source src="sherine.mp3" type="audio/mpeg">
+    <source src="sherine.m4a" type="audio/mp4">
+  </audio>
+
+  <div class="scene">
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="heart" width="380" height="380"></canvas>
+      <svg id="liquidLetter" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Radiant Metallic Gradient -->
+          <linearGradient id="letterGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="45%" stop-color="#ff99bc" />
+            <stop offset="100%" stop-color="#ff3a6e" />
+          </linearGradient>
+          <!-- Multi-stage Neon Filter -->
+          <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3.5" result="blur1" />
+            <feGaussianBlur stdDeviation="8" result="blur2" />
+            <feMerge>
+              <feMergeNode in="blur2" />
+              <feMergeNode in="blur1" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- Outer Glowing Ambient Shadow -->
+        <text id="strokeTextBack" x="70" y="112" text-anchor="middle" font-family="'Playfair Display', 'Cairo', serif"
+          font-weight="700" font-style="italic" font-size="115" fill="none" stroke="#ff3a6e" stroke-width="5"
+          opacity="0.8" filter="url(#neonGlow)">A</text>
+
+        <!-- Crisp Solid Glowing Text -->
+        <text id="clipTextNode" x="70" y="112" text-anchor="middle" font-family="'Playfair Display', 'Cairo', serif"
+          font-weight="700" font-style="italic" font-size="115" fill="url(#letterGrad)">A</text>
+
+        <!-- Sharp Radiant Outline Highlight -->
+        <text id="strokeTextFront" x="70" y="112" text-anchor="middle" font-family="'Playfair Display', 'Cairo', serif"
+          font-weight="700" font-style="italic" font-size="115" fill="none" stroke="#ffffff" stroke-width="1.2"
+          opacity="0.95">A</text>
+      </svg>
+    </div>
+
+    <!-- Custom Letter Control -->
+    <div class="controls-container">
+      <div class="letter-control">
+        <label for="customInput">🔤 الحرف/الاسم:</label>
+        <input type="text" id="customInput" class="letter-input" value="A" maxlength="6" placeholder="A" />
+        <div class="quick-chips">
+          <button class="chip-btn" data-val="A">A</button>
+          <button class="chip-btn" data-val="M">M</button>
+          <button class="chip-btn" data-val="S">S</button>
+          <button class="chip-btn" data-val="H">H</button>
+          <button class="chip-btn" data-val="F">F</button>
+          <button class="chip-btn" data-val="K">K</button>
+          <button class="chip-btn" data-val="R">R</button>
+          <button class="chip-btn" data-val="N">N</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Font Style Selector Bar -->
+    <div class="font-bar">
+      <span>✨ الخط:</span>
+      <button class="font-btn active" data-font="'Playfair Display', 'Cairo', serif">كلاسيكي 👑</button>
+      <button class="font-btn" data-font="'Dancing Script', cursive">رومانسي 💖</button>
+      <button class="font-btn" data-font="'Outfit', sans-serif">عصري ⚡</button>
+      <button class="font-btn" data-font="'Amiri', 'Cairo', serif">عربي 🕌</button>
+    </div>
+
+    <!-- Color picker -->
+    <div class="color-bar">
+      <span>🎨 اللون:</span>
+      <div class="clr-btn active" data-colors='["#ff3a6e","#ff80a0","#ff306077","#ff006633"]'
+        style="background:linear-gradient(135deg,#ff3a6e,#ff80a0)" title="وردي"></div>
+      <div class="clr-btn" data-colors='["#e84393","#ff66cc","#cc006077","#aa003333"]'
+        style="background:linear-gradient(135deg,#e84393,#ff66cc)" title="فوشيا"></div>
+      <div class="clr-btn" data-colors='["#ff4500","#ff7733","#cc220077","#88110033"]'
+        style="background:linear-gradient(135deg,#ff4500,#ff7733)" title="برتقالي"></div>
+      <div class="clr-btn" data-colors='["#aa00ff","#cc66ff","#66008877","#33004433"]'
+        style="background:linear-gradient(135deg,#aa00ff,#cc66ff)" title="بنفسجي"></div>
+      <div class="clr-btn" data-colors='["#00b4d8","#90e0ef","#00608877","#00304433"]'
+        style="background:linear-gradient(135deg,#00b4d8,#90e0ef)" title="أزرق"></div>
+      <div class="clr-btn" data-colors='["#00c853","#69ff47","#00882277","#00441133"]'
+        style="background:linear-gradient(135deg,#00c853,#69ff47)" title="أخضر"></div>
+    </div>
+
+    <!-- Typewriter message -->
+    <div class="message-wrap">
+      <span id="msgText"></span>
+    </div>
+
+
+
+    <!-- Buttons -->
+    <div class="btn-row">
+      <button class="btn btn-replay" id="replay">↺ &nbsp;إعادة الرسم</button>
+      <button class="btn btn-share" id="shareBtn">🔗 مشاركة</button>
+      <button class="btn btn-save" id="saveBtn">📷 حفظ كصورة</button>
+    </div>
+
+    <p class="subtitle">صُنِعَ بواسطة Ahmed Fazza</p>
+  </div>
+
+  <script>
+    /* ══════════════════════════════════════════════════════════════
+       1. SHERINE SONG & MUSIC ENGINE
+          (High Quality Local Song: sherine.mp3 / sherine.m4a + File Picker + Ambient Synth fallback)
+    ══════════════════════════════════════════════════════════════ */
+    const musicBtn = document.getElementById('musicBtn');
+    const uploadMusicBtn = document.getElementById('uploadMusicBtn');
+    const musicFileInput = document.getElementById('musicFileInput');
+    const musicIcon = document.getElementById('musicIcon');
+    const musicText = document.getElementById('musicText');
+    const songAudio = document.getElementById('songAudio');
+
+    let isMusicPlaying = false;
+    let currentMusicMode = null; // 'audio' or 'synth'
+
+    // Ambient Synth Fallback (Web Audio API)
+    let audioCtx = null;
+    let synthTimer = null;
+    const CHORD_PROGRESSIONS = [
+      [174.61, 261.63, 329.63, 440.00, 523.25],
+      [196.00, 293.66, 392.00, 493.88, 659.25],
+      [164.81, 246.94, 329.63, 392.00, 587.33],
+      [220.00, 329.63, 392.00, 523.25, 659.25]
+    ];
+
+    function playSoftTone(freq, time, dur = 2.4, vol = 0.09) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const gain2 = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, time);
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(freq, time);
+      gain2.gain.setValueAtTime(vol * 0.45, time);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1400, time);
+      filter.frequency.exponentialRampToValueAtTime(350, time + dur);
+
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.exponentialRampToValueAtTime(vol, time + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+      osc.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(time);
+      osc2.start(time);
+      osc.stop(time + dur);
+      osc2.stop(time + dur);
+    }
+
+    let chordIdx = 0;
+    function scheduleNextChord() {
+      if (currentMusicMode !== 'synth' || !audioCtx) return;
+      const now = audioCtx.currentTime;
+      const chord = CHORD_PROGRESSIONS[chordIdx % CHORD_PROGRESSIONS.length];
+      chordIdx++;
+
+      playSoftTone(chord[0] * 0.5, now, 3.8, 0.12);
+      chord.forEach((freq, idx) => {
+        playSoftTone(freq, now + idx * 0.32 + Math.random() * 0.05, 3.2, 0.08);
+      });
+      if (Math.random() > 0.3) {
+        const highNote = chord[Math.floor(Math.random() * chord.length)] * 2;
+        playSoftTone(highNote, now + 1.8, 2.0, 0.04);
+      }
+      synthTimer = setTimeout(scheduleNextChord, 3400);
+    }
+
+    function startSynth() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      currentMusicMode = 'synth';
+      setMusicPlayingUI(true, 'موسيقى هادئة 🎵');
+      scheduleNextChord();
+    }
+
+    function setMusicPlayingUI(playing, label) {
+      isMusicPlaying = playing;
+      if (playing) {
+        musicBtn.classList.add('playing');
+        musicIcon.textContent = '🔊';
+        musicText.textContent = label || 'الأغنية تعمل 🎶';
+      } else {
+        musicBtn.classList.remove('playing');
+        musicIcon.textContent = '🎵';
+        musicText.textContent = 'شيرين – عيونك دوبوني';
+        currentMusicMode = null;
+      }
+    }
+
+    // Master start & stop
+    async function startMusic() {
+      try {
+        await songAudio.play();
+        currentMusicMode = 'audio';
+        setMusicPlayingUI(true, 'شيرين – عيونك دوبوني 🎶');
+        showToast('جاري تشغيل: شيرين - عيونك دوبوني 🎵');
+        return;
+      } catch (err) {
+        console.error('Audio play error:', err);
+        startSynth();
+        showToast('الموسيقى البديلة تعمل 🎵');
+      }
+    }
+
+    function stopMusic() {
+      if (songAudio) {
+        songAudio.pause();
+      }
+      if (synthTimer) {
+        clearTimeout(synthTimer);
+      }
+      setMusicPlayingUI(false);
+      showToast('تم إيقاف الموسيقى 🔇');
+    }
+
+    musicBtn.addEventListener('click', () => {
+      if (isMusicPlaying) stopMusic();
+      else startMusic();
+    });
+
+    // File upload button logic
+    uploadMusicBtn.addEventListener('click', () => {
+      musicFileInput.click();
+    });
+
+    musicFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (isMusicPlaying) stopMusic();
+        const objUrl = URL.createObjectURL(file);
+        songAudio.src = objUrl;
+        songAudio.play().then(() => {
+          currentMusicMode = 'audio';
+          setMusicPlayingUI(true, 'شيرين – عيونك دوبوني 🎶');
+          showToast(`تم تشغيل: ${file.name.slice(0, 22)} 🎵`);
+        }).catch(err => {
+          showToast('تعذر تشغيل الملف الصوتي');
+        });
+      }
+    });
+
+    /* ══════════════════════════════════════════════════════════════
+       2. CUSTOM NAME / LETTER CONTROLLER
+    ══════════════════════════════════════════════════════════════ */
+    const customInput = document.getElementById('customInput');
+    const clipTextNode = document.getElementById('clipTextNode');
+    const strokeTextBack = document.getElementById('strokeTextBack');
+    const strokeTextFront = document.getElementById('strokeTextFront');
+
+    function updateLetterDisplay(val) {
+      const text = (val || 'A').trim();
+      const len = [...text].length;
+
+      let fontSize = 115;
+      let yPos = 112;
+
+      if (len === 1) {
+        fontSize = 115;
+        yPos = 112;
+      } else if (len === 2) {
+        fontSize = 72;
+        yPos = 95;
+      } else if (len === 3) {
+        fontSize = 52;
+        yPos = 88;
+      } else {
+        fontSize = 40;
+        yPos = 82;
+      }
+
+      [clipTextNode, strokeTextBack, strokeTextFront].forEach(node => {
+        node.textContent = text;
+        node.setAttribute('font-size', fontSize);
+        node.setAttribute('y', yPos);
+      });
+    }
+
+    let currentFontFamily = "'Playfair Display', 'Cairo', serif";
+
+    customInput.addEventListener('input', e => {
+      updateLetterDisplay(e.target.value);
+    });
+
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.val;
+        customInput.value = val;
+        updateLetterDisplay(val);
+      });
+    });
+
+    // Font family picker logic
+    document.querySelectorAll('.font-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFontFamily = btn.dataset.font;
+        [clipTextNode, strokeTextBack, strokeTextFront].forEach(node => {
+          node.setAttribute('font-family', currentFontFamily);
+          node.style.fontFamily = currentFontFamily;
+        });
+      });
+    });
+
+
+
+    /* ══════════════════════════════════════════════════════════════
+       4. FALLING ROSE PETALS ENGINE (Smooth fluttering 3D physics)
+    ══════════════════════════════════════════════════════════════ */
+    const petalCanvas = document.getElementById('petalCanvas');
+    const px = petalCanvas.getContext('2d');
+    let petalsEnabled = true;
+    const petals = [];
+    const PETAL_COUNT = 28;
+
+    function resizePetals() {
+      petalCanvas.width = window.innerWidth;
+      petalCanvas.height = window.innerHeight;
+    }
+    resizePetals();
+    window.addEventListener('resize', resizePetals);
+
+    class Petal {
+      constructor() {
+        this.reset(true);
+      }
+      reset(init = false) {
+        this.x = Math.random() * petalCanvas.width;
+        this.y = init ? Math.random() * petalCanvas.height : -30;
+        this.size = Math.random() * 12 + 10;
+        this.speedY = Math.random() * 1.2 + 0.8;
+        this.speedX = (Math.random() - 0.5) * 0.8;
+        this.sway = Math.random() * Math.PI * 2;
+        this.swaySpeed = Math.random() * 0.03 + 0.015;
+        this.swayWidth = Math.random() * 1.5 + 0.8;
+
+        this.rotZ = Math.random() * Math.PI * 2;
+        this.rotZSpeed = (Math.random() - 0.5) * 0.03;
+        this.flip = Math.random() * Math.PI * 2;
+        this.flipSpeed = Math.random() * 0.04 + 0.02;
+
+        const shades = [
+          { fill1: '#e6004c', fill2: '#8b0028', border: '#ff6699' },
+          { fill1: '#ff2d6f', fill2: '#990033', border: '#ff99bb' },
+          { fill1: '#cc0033', fill2: '#66001a', border: '#ff4d79' },
+          { fill1: '#d81b60', fill2: '#880e4f', border: '#f48fb1' }
+        ];
+        this.colors = shades[Math.floor(Math.random() * shades.length)];
+        this.opacity = Math.random() * 0.35 + 0.55;
+      }
+      update() {
+        this.y += this.speedY;
+        this.sway += this.swaySpeed;
+        this.x += Math.sin(this.sway) * this.swayWidth + this.speedX;
+        this.rotZ += this.rotZSpeed;
+        this.flip += this.flipSpeed;
+
+        if (this.y > petalCanvas.height + 30 || this.x < -40 || this.x > petalCanvas.width + 40) {
+          this.reset(false);
+        }
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotZ);
+        const scaleY = Math.sin(this.flip);
+        ctx.scale(1, scaleY);
+        ctx.globalAlpha = this.opacity * (0.6 + 0.4 * Math.abs(scaleY));
+
+        const grad = ctx.createRadialGradient(0, -this.size * 0.3, 2, 0, 0, this.size);
+        grad.addColorStop(0, this.colors.fill1);
+        grad.addColorStop(0.85, this.colors.fill2);
+        grad.addColorStop(1, '#33000d');
+        ctx.fillStyle = grad;
+
+        ctx.beginPath();
+        ctx.moveTo(0, this.size);
+        ctx.bezierCurveTo(this.size * 0.9, this.size * 0.4, this.size * 0.8, -this.size * 0.7, 0, -this.size);
+        ctx.bezierCurveTo(-this.size * 0.8, -this.size * 0.7, -this.size * 0.9, this.size * 0.4, 0, this.size);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = this.colors.border;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    }
+
+    for (let i = 0; i < PETAL_COUNT; i++) {
+      petals.push(new Petal());
+    }
+
+    function renderPetals() {
+      px.clearRect(0, 0, petalCanvas.width, petalCanvas.height);
+      if (petalsEnabled) {
+        for (const petal of petals) {
+          petal.update();
+          petal.draw(px);
+        }
+      }
+      requestAnimationFrame(renderPetals);
+    }
+    renderPetals();
+
+    const petalToggleBtn = document.getElementById('petalToggleBtn');
+    const petalText = document.getElementById('petalText');
+    petalToggleBtn.addEventListener('click', () => {
+      petalsEnabled = !petalsEnabled;
+      petalText.textContent = petalsEnabled ? 'البتلات' : 'البتلات ✗';
+      showToast(petalsEnabled ? 'تم تفعيل البتلات 🌹' : 'تم تعطيل البتلات');
+    });
+
+    /* ════════════════════════════════
+       STARS
+    ════════════════════════════════ */
+    (function () {
+      const sc = document.getElementById('starCanvas');
+      const sx = sc.getContext('2d');
+      const stars = [];
+      function resize() { sc.width = window.innerWidth; sc.height = window.innerHeight; }
+      resize(); window.addEventListener('resize', resize);
+      for (let i = 0; i < 160; i++) stars.push({
+        x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight,
+        r: Math.random() * 1.8 + 0.3, speed: Math.random() * 0.25 + 0.05,
+        angle: Math.random() * Math.PI * 2, twinkleSpeed: Math.random() * 0.02 + 0.005,
+        twinklePhase: Math.random() * Math.PI * 2, brightness: Math.random() * 0.5 + 0.4
+      });
+      function draw() {
+        sx.clearRect(0, 0, sc.width, sc.height);
+        const bg = sx.createRadialGradient(sc.width / 2, 0, 0, sc.width / 2, sc.height / 2, sc.height);
+        bg.addColorStop(0, '#1a0025'); bg.addColorStop(0.5, '#0d0018'); bg.addColorStop(1, '#000');
+        sx.fillStyle = bg; sx.fillRect(0, 0, sc.width, sc.height);
+        for (const s of stars) {
+          s.x += Math.cos(s.angle) * s.speed; s.y += Math.sin(s.angle) * s.speed;
+          if (s.x < -5) s.x = sc.width + 5; if (s.x > sc.width + 5) s.x = -5;
+          if (s.y < -5) s.y = sc.height + 5; if (s.y > sc.height + 5) s.y = -5;
+          s.twinklePhase += s.twinkleSpeed;
+          const a = s.brightness * (0.5 + 0.5 * Math.sin(s.twinklePhase));
+          sx.save(); sx.globalAlpha = a; sx.shadowColor = '#fff'; sx.shadowBlur = s.r * 4;
+          sx.fillStyle = '#fff'; sx.beginPath(); sx.arc(s.x, s.y, s.r, 0, Math.PI * 2); sx.fill();
+          if (s.r > 1.4) {
+            sx.globalAlpha = a * 0.4; sx.strokeStyle = '#fff'; sx.lineWidth = 0.5;
+            sx.beginPath(); sx.moveTo(s.x - s.r * 3, s.y); sx.lineTo(s.x + s.r * 3, s.y);
+            sx.moveTo(s.x, s.y - s.r * 3); sx.lineTo(s.x, s.y + s.r * 3); sx.stroke();
+          }
+          sx.restore();
+        }
+        requestAnimationFrame(draw);
+      }
+      requestAnimationFrame(draw);
+    })();
+
+    /* ════════════════════════════════
+       HEART ENGINE
+    ════════════════════════════════ */
+    const canvas = document.getElementById('heart');
+    const ctx = canvas.getContext('2d');
+    const liquidEl = document.getElementById('liquidLetter');
+    const msgText = document.getElementById('msgText');
+    const canvasWrap = document.getElementById('canvasWrap');
+    const MESSAGE = '✨ القلب يرسم ما لا تستطيع الكلمات قوله ✨';
+    const W = canvas.width, H = canvas.height;
+    const CX = W / 2, CY = H / 2 + 18, STEPS = 500;
+    let SCALE = 110;
+
+    /* ── Color scheme ── */
+    let COLORS = { stroke1: '#ff3a6e', stroke2: '#ff80a0', stroke3: '#ffb347', fill1: '#ff6fa0bb', fill2: '#ff306077', fill3: '#88001833', glow: '#ff3a6ed0', glowPulse: '#ff006633' };
+
+    function applyColorScheme(c) {
+      COLORS.stroke1 = c[0]; COLORS.stroke2 = c[1];
+      COLORS.fill1 = c[0] + 'bb'; COLORS.fill2 = c[0] + '55'; COLORS.fill3 = c[0] + '22';
+      COLORS.glow = c[0] + 'd0'; COLORS.glowPulse = c[0] + '33';
+      canvasWrap.style.setProperty('--glow-color', COLORS.glowPulse);
+
+      // Dynamic SVG Gradient and Glow Sync for Radiant Glowing Neon Letter
+      const gradStop1 = document.querySelectorAll('#letterGrad stop')[1];
+      const gradStop2 = document.querySelectorAll('#letterGrad stop')[2];
+      const strokeBack = document.getElementById('strokeTextBack');
+      const strokeFront = document.getElementById('strokeTextFront');
+
+      if (gradStop1) gradStop1.setAttribute('stop-color', c[1] || '#ff99bc');
+      if (gradStop2) gradStop2.setAttribute('stop-color', c[0] || '#ff3a6e');
+      if (strokeBack) strokeBack.setAttribute('stroke', c[0] || '#ff3a6e');
+      if (strokeFront) strokeFront.setAttribute('stroke', '#ffffff');
+    }
+
+    document.querySelectorAll('.clr-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.clr-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const c = JSON.parse(btn.dataset.colors);
+        applyColorScheme(c);
+      });
+    });
+
+    /* ── Typewriter ── */
+    function typeWriter() {
+      msgText.textContent = '';
+      msgText.classList.add('active');
+      msgText.classList.remove('done');
+      let i = 0;
+      const chars = [...MESSAGE];
+      function type() {
+        if (i < chars.length) { msgText.textContent += chars[i++]; setTimeout(type, 75); }
+        else setTimeout(() => msgText.classList.add('done'), 600);
+      }
+      setTimeout(type, 400);
+    }
+
+    /* ── Click-heart effect ── */
+    const HEART_EMOJIS = ['❤️', '💕', '💖', '💗', '💓', '🌹', '✨'];
+    function spawnHeart(x, y) {
+      const el = document.createElement('span');
+      el.className = 'click-heart';
+      el.textContent = HEART_EMOJIS[Math.floor(Math.random() * HEART_EMOJIS.length)];
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+    document.addEventListener('click', e => {
+      if (e.target.closest('button') || e.target.closest('.clr-btn') || e.target.closest('input') || e.target.closest('.top-btn') || e.target.closest('.letter-control')) return;
+      spawnHeart(e.clientX, e.clientY);
+    });
+    /* Touch tap hearts (mobile) */
+    document.addEventListener('touchstart', e => {
+      const t = e.touches[0]; if (!t) return;
+      if (e.target.closest('button') || e.target.closest('.clr-btn') || e.target.closest('input') || e.target.closest('.top-btn') || e.target.closest('.letter-control')) return;
+      spawnHeart(t.clientX, t.clientY);
+    }, { passive: true });
+
+    /* ── Heart math ── */
+    function heartPoint(t) {
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+      return { x: CX + x * (SCALE / 16), y: CY + y * (SCALE / 16) };
+    }
+    const heartPts = [];
+    for (let i = 0; i <= STEPS; i++) heartPts.push(heartPoint((i / STEPS) * Math.PI * 2));
+
+    const LAYERS = [{ w: 20, a: 0.03 }, { w: 12, a: 0.08 }, { w: 6, a: 0.25 }, { w: 2.5, a: 1 }];
+
+    /* ── Particles ── */
+    const particles = [];
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x; this.y = y; this.color = color;
+        this.vx = (Math.random() - 0.5) * 2.8; this.vy = (Math.random() - 0.5) * 2.8 - 1.2;
+        this.life = 1; this.decay = Math.random() * 0.028 + 0.012; this.r = Math.random() * 2.8 + 0.8;
+      }
+      update() { this.x += this.vx; this.y += this.vy; this.vy += 0.04; this.life -= this.decay; }
+      draw(c) {
+        c.save(); c.globalAlpha = this.life * 0.85;
+        c.fillStyle = this.color; c.shadowColor = this.color; c.shadowBlur = 10;
+        c.beginPath(); c.arc(this.x, this.y, this.r, 0, Math.PI * 2); c.fill(); c.restore();
+      }
+    }
+
+    /* ── State ── */
+    let rafId = null, frame = 0, phase = 'draw';
+    let drawProgress = 0, fillProgress = 0, letterScale = 0, breathFrame = 0;
+
+    function drawHeartStroke(progress) {
+      const count = Math.floor(progress * STEPS); if (count < 2) return;
+      for (const l of LAYERS) {
+        ctx.save(); ctx.lineWidth = l.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha = l.a;
+        ctx.beginPath(); ctx.moveTo(heartPts[0].x, heartPts[0].y);
+        for (let i = 1; i <= count; i++) ctx.lineTo(heartPts[i].x, heartPts[i].y);
+        if (l.a === 1) {
+          const g = ctx.createLinearGradient(heartPts[0].x, heartPts[0].y, heartPts[count].x, heartPts[count].y);
+          g.addColorStop(0, COLORS.stroke1); g.addColorStop(0.35, COLORS.stroke2);
+          g.addColorStop(0.7, COLORS.stroke1); g.addColorStop(1, COLORS.stroke3 || '#ffb347');
+          ctx.strokeStyle = g;
+        } else ctx.strokeStyle = COLORS.stroke1;
+        ctx.shadowColor = COLORS.glow; ctx.shadowBlur = 28; ctx.stroke(); ctx.restore();
+      }
+    }
+
+    function drawHeartFill(alpha) {
+      if (alpha <= 0) return;
+      ctx.save(); ctx.globalAlpha = alpha;
+      const g = ctx.createRadialGradient(CX, CY - 24, 8, CX, CY + 10, SCALE * 1.15);
+      g.addColorStop(0, COLORS.fill1); g.addColorStop(0.5, COLORS.fill2); g.addColorStop(1, COLORS.fill3);
+      ctx.fillStyle = g; ctx.shadowColor = COLORS.stroke1; ctx.shadowBlur = 45;
+      ctx.beginPath(); ctx.moveTo(heartPts[0].x, heartPts[0].y);
+      for (let i = 1; i < heartPts.length; i++) ctx.lineTo(heartPts[i].x, heartPts[i].y);
+      ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+
+    const easeInOut = t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    const easeSpring = t => {
+      if (t === 0) return 0; if (t === 1) return 1;
+      return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI / 3)) + 1;
+    };
+
+    function setLetter(sc, breathe) {
+      const base = easeSpring(Math.min(sc, 1));
+      let b = 1;
+      if (breathe) { breathFrame++; b = 0.93 + 0.07 * Math.sin(breathFrame * 0.04); }
+      liquidEl.style.transform = 'translate(-50%,-50%) scale(' + (base * b) + ')';
+    }
+
+    function animate() {
+      rafId = requestAnimationFrame(animate); frame++;
+      ctx.clearRect(0, 0, W, H);
+
+      if (phase === 'draw') {
+        drawProgress = Math.min(1, drawProgress + 0.004);
+        if (drawProgress < 1 && frame % 3 === 0) {
+          const tip = heartPts[Math.min(Math.floor(drawProgress * STEPS), STEPS - 1)];
+          particles.push(new Particle(tip.x, tip.y, 'hsl(' + (340 + drawProgress * 80) + ',100%,70%)'));
+        }
+        if (drawProgress >= 1) phase = 'fill';
+      }
+      if (phase === 'fill') {
+        fillProgress = Math.min(1, fillProgress + 0.016);
+        if (fillProgress >= 1) phase = 'letter';
+      }
+      if (phase === 'letter') {
+        letterScale = Math.min(1, letterScale + 0.022);
+        liquidEl.classList.add('show'); setLetter(letterScale, false);
+        if (letterScale >= 1) { phase = 'idle'; typeWriter(); }
+      }
+      if (phase === 'idle') {
+        const pulse = 0.58 + 0.07 * Math.sin(frame * 0.04);
+        drawHeartFill(pulse); drawHeartStroke(1); setLetter(1, true);
+        for (let i = particles.length - 1; i >= 0; i--) {
+          particles[i].update(); particles[i].draw(ctx);
+          if (particles[i].life <= 0) particles.splice(i, 1);
+        }
+        return;
+      }
+      drawHeartFill(easeInOut(fillProgress) * 0.72);
+      drawHeartStroke(drawProgress);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update(); particles[i].draw(ctx);
+        if (particles[i].life <= 0) particles.splice(i, 1);
+      }
+    }
+
+    /* ── Replay ── */
+    function start() {
+      cancelAnimationFrame(rafId);
+      drawProgress = 0; fillProgress = 0; letterScale = 0; breathFrame = 0;
+      phase = 'draw'; frame = 0; particles.length = 0;
+      liquidEl.classList.remove('show');
+      liquidEl.style.transform = 'translate(-50%,-50%) scale(0)';
+      msgText.textContent = ''; msgText.classList.remove('active', 'done');
+      animate();
+    }
+
+    /* ── Share ── */
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      const url = window.location.href;
+      if (navigator.share) {
+        await navigator.share({ title: 'Heart Drawing', text: '✨ شاهد هذا القلب الجميل!', url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        showToast('تم نسخ الرابط! 🔗');
+      }
+    });
+
+    /* ── Save screenshot ── */
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const offscreen = document.createElement('canvas');
+      offscreen.width = W; offscreen.height = H;
+      const oc = offscreen.getContext('2d');
+
+      // High aesthetic background
+      const bg = oc.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, W * 0.8);
+      bg.addColorStop(0, '#1a0025'); bg.addColorStop(0.6, '#0d0018'); bg.addColorStop(1, '#040008');
+      oc.fillStyle = bg; oc.fillRect(0, 0, W, H);
+
+      // copy heart canvas
+      oc.drawImage(canvas, 0, 0);
+
+      // Draw letter text using current selected font
+      const letterVal = (customInput ? customInput.value : 'A').trim();
+      oc.save();
+      oc.font = `bold italic 72px ${currentFontFamily}`;
+      oc.fillStyle = '#ffffff';
+      oc.shadowColor = COLORS.stroke2 || '#60efff';
+      oc.shadowBlur = 18;
+      oc.textAlign = 'center';
+      oc.textBaseline = 'middle';
+      oc.fillText(letterVal, CX, CY - 2);
+      oc.restore();
+
+
+
+      // Watermark
+      oc.save();
+      oc.font = '400 11px "Cairo", sans-serif';
+      oc.fillStyle = 'rgba(255,111,160,0.3)';
+      oc.textAlign = 'center';
+      oc.fillText('صُنِعَ بواسطة Ahmed Fazza ✨', CX, H - 7);
+      oc.restore();
+
+      // trigger download
+      const a = document.createElement('a');
+      a.download = `heart-${letterVal || 'love'}.png`;
+      a.href = offscreen.toDataURL('image/png');
+      a.click();
+      showToast('تم حفظ كارت الإهداء كصورة بنجاح! 📷');
+    });
+
+    /* ── Toast notification ── */
+    function showToast(msg) {
+      document.querySelectorAll('.toast').forEach(t => t.remove());
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; setTimeout(() => t.remove(), 400); }, 2500);
+    }
+
+    document.getElementById('replay').addEventListener('click', start);
+    setTimeout(start, 800);
+  </script>
+</body>
+
+</html>
