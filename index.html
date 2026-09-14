@@ -253,8 +253,8 @@
       left: 50%;
       top: 54.7%;
       transform: translate(-50%, -50%) scale(0);
-      width: min(170px, 48%);
-      height: min(170px, 48%);
+      width: min(135px, 38%);
+      height: min(135px, 38%);
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.2s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -315,19 +315,19 @@
     }
 
     .letter-input {
-      width: 60px;
+      width: 110px;
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 111, 160, 0.5);
       border-radius: 20px;
       color: #fff;
-      font-size: 0.88rem;
+      font-size: 0.95rem;
       font-weight: bold;
       text-align: center;
-      padding: 3px 6px;
+      padding: 4px 10px;
       outline: none;
       transition: all 0.2s;
-      font-family: 'Playfair Display', 'Cairo', serif;
-      direction: ltr;
+      font-family: 'Cairo', 'Playfair Display', serif;
+      direction: rtl;
     }
 
     .letter-input.date-input {
@@ -1044,21 +1044,21 @@
       const text = (val || 'A').trim();
       const len = [...text].length;
 
-      let fontSize = 125;
-      let yPos = 115;
+      let fontSize = 115;
+      let yPos = 112;
 
       if (len === 1) {
-        fontSize = 125;
-        yPos = 115;
+        fontSize = 115;
+        yPos = 112;
       } else if (len === 2) {
-        fontSize = 88;
-        yPos = 98;
+        fontSize = 72;
+        yPos = 95;
       } else if (len === 3) {
-        fontSize = 66;
-        yPos = 92;
-      } else {
         fontSize = 52;
-        yPos = 86;
+        yPos = 88;
+      } else {
+        fontSize = 40;
+        yPos = 82;
       }
 
       [clipTextNode, strokeTextBack, strokeTextFront].forEach(node => {
