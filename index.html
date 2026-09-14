@@ -253,8 +253,8 @@
       left: 50%;
       top: 54.7%;
       transform: translate(-50%, -50%) scale(0);
-      width: min(135px, 38%);
-      height: min(135px, 38%);
+      width: min(170px, 48%);
+      height: min(170px, 48%);
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.2s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1044,21 +1044,21 @@
       const text = (val || 'A').trim();
       const len = [...text].length;
 
-      let fontSize = 115;
-      let yPos = 112;
+      let fontSize = 125;
+      let yPos = 115;
 
       if (len === 1) {
-        fontSize = 115;
-        yPos = 112;
+        fontSize = 125;
+        yPos = 115;
       } else if (len === 2) {
-        fontSize = 72;
-        yPos = 95;
+        fontSize = 88;
+        yPos = 98;
       } else if (len === 3) {
-        fontSize = 52;
-        yPos = 88;
+        fontSize = 66;
+        yPos = 92;
       } else {
-        fontSize = 40;
-        yPos = 82;
+        fontSize = 52;
+        yPos = 86;
       }
 
       [clipTextNode, strokeTextBack, strokeTextFront].forEach(node => {
